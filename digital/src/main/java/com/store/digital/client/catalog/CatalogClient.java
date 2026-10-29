@@ -1,7 +1,9 @@
 package com.store.digital.client.catalog;
 
+import com.store.digital.exception.ProductNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Component
@@ -14,9 +16,13 @@ public class CatalogClient {
 	}
 
 	public ProductServiceResponse getProduct(String productId) {
-		return restClient.get()
-				.uri("/microservices/products/{id}", productId)
-				.retrieve()
-				.body(ProductServiceResponse.class);
+		try {
+			return restClient.get()
+					.uri("/microservices/products/{id}", productId)
+					.retrieve()
+					.body(ProductServiceResponse.class);
+		} catch (HttpClientErrorException.NotFound exception) {
+			throw new ProductNotFoundException(productId, exception);
+		}
 	}
 }

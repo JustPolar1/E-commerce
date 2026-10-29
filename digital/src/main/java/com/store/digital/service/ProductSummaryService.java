@@ -8,8 +8,10 @@ import com.store.digital.client.inventory.InventoryClient;
 import com.store.digital.client.inventory.InventoryServiceResponse;
 import com.store.digital.config.ServiceProperties;
 import com.store.digital.dto.response.ProductSummaryResponse;
+import com.store.digital.exception.UpstreamServiceException;
 import java.math.RoundingMode;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import org.springframework.stereotype.Service;
 
@@ -44,13 +46,30 @@ public class ProductSummaryService {
 		CompletableFuture<ExchangeRateResponse> exchangeFuture = CompletableFuture.supplyAsync(
 				exchangeRateClient::getLatestRate, executor);
 
-		CompletableFuture.allOf(productFuture, inventoryFuture, exchangeFuture).join();
+		try {
+			CompletableFuture.allOf(productFuture, inventoryFuture, exchangeFuture).join();
+		} catch (CompletionException exception) {
+			Throwable cause = exception.getCause();
+			if (cause instanceof RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			if (cause instanceof Error error) {
+				throw error;
+			}
+			throw new UpstreamServiceException("No se pudieron consultar los servicios requeridos.", cause);
+		}
 
 		ProductServiceResponse product = productFuture.join();
 		InventoryServiceResponse inventory = inventoryFuture.join();
 		ExchangeRateResponse exchange = exchangeFuture.join();
+		if (product == null || inventory == null || exchange == null || product.priceUsd() == null) {
+			throw new UpstreamServiceException("Un servicio devolvió una respuesta incompleta.");
+		}
 
 		var conversionRate = exchange.rateFor(targetCurrency);
+		if (conversionRate == null) {
+			throw new UpstreamServiceException("La tasa de cambio solicitada no está disponible.");
+		}
 		var priceLocal = product.priceUsd().multiply(conversionRate).setScale(2, RoundingMode.HALF_UP);
 
 		return new ProductSummaryResponse(

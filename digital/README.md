@@ -16,7 +16,7 @@ endpoint y el gateway reúne información del catálogo, inventario y tipo de ca
 - `client/catalog`, `client/inventory`, `client/exchange`: clientes HTTP para los proveedores.
 - `dto/request` y `dto/response`: contratos de entrada y salida.
 - `service`: orquestación concurrente y composición del resumen.
-- `exception`: manejo centralizado de errores (pendiente de implementación).
+- `exception`: manejo centralizado de errores para entradas inválidas y fallos de proveedores.
 
 ## Endpoint
 
@@ -24,7 +24,8 @@ endpoint y el gateway reúne información del catálogo, inventario y tipo de ca
   convertido a MXN, disponibilidad y datos relevantes de catálogo e inventario.
 
 Las consultas a los tres proveedores se ejecutan concurrentemente. El precio local
-se redondea a dos decimales.
+se redondea a dos decimales. Los clientes aplican límites de conexión y lectura; los
+errores de proveedor se devuelven en un contrato uniforme con estado y ruta.
 
 ## Configuración
 
