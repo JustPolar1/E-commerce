@@ -1,6 +1,7 @@
 # E-Commerce Gateway
 
-Punto de partida para el backend de una API agregadora de datos de producto.
+Backend de una API agregadora de datos de producto. El frontend consulta un único
+endpoint y el gateway reúne información del catálogo, inventario y tipo de cambio.
 
 ## Stack
 
@@ -11,13 +12,19 @@ Punto de partida para el backend de una API agregadora de datos de producto.
 ## Estructura
 
 - `config`: configuración de la aplicación y clientes HTTP.
-- `controller`: futura capa de entrada REST.
-- `client/catalog`, `client/inventory`, `client/exchange`: adaptadores para servicios propios y de terceros.
+- `controller`: endpoints REST.
+- `client/catalog`, `client/inventory`, `client/exchange`: clientes HTTP para los proveedores.
 - `dto/request` y `dto/response`: contratos de entrada y salida.
-- `service`: futura orquestación de la API compuesta.
-- `exception`: manejo centralizado de errores.
+- `service`: orquestación concurrente y composición del resumen.
+- `exception`: manejo centralizado de errores (pendiente de implementación).
 
-La estructura está preparada, sin endpoints ni lógica de negocio implementados.
+## Endpoint
+
+- `GET /api/v1/products/{id}/summary`: devuelve el resumen del producto con precio
+  convertido a MXN, disponibilidad y datos relevantes de catálogo e inventario.
+
+Las consultas a los tres proveedores se ejecutan concurrentemente. El precio local
+se redondea a dos decimales.
 
 ## Configuración
 
