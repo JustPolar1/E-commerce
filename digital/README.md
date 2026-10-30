@@ -43,3 +43,29 @@ Las direcciones de servicios se configuran con propiedades Spring o variables de
 En Windows: `mvnw.cmd spring-boot:run`
 
 En Linux/macOS: `./mvnw spring-boot:run`
+
+## Evidencias de funcionamiento en Postman o Insomnia
+
+Antes de tomar las capturas, inicia los microservicios propios de catálogo e
+inventario en sus direcciones configuradas y después inicia este gateway en el
+puerto `8080`. Los servicios de catálogo e inventario son dependencias externas a
+este proyecto; esta aplicación contiene sus clientes, pero no sus implementaciones.
+
+Usa el mismo identificador de producto (`P-101`) en todas las solicitudes. En
+Postman o Insomnia selecciona el método `GET`, envía cada solicitud y captura la
+pantalla mostrando la URL, el estado HTTP y el cuerpo JSON de respuesta.
+
+| Captura | Solicitud | Qué debe mostrar |
+|---|---|---|
+| 1. Catálogo | `GET http://localhost:8081/microservices/products/P-101` | Respuesta JSON con `product_id`, `title`, `description`, `category` y `price_usd`. |
+| 2. Inventario | `GET http://localhost:8082/microservices/inventory/P-101` | Respuesta JSON con `product_id`, `stock_status`, `available_units`, `warehouse_location` y `estimated_delivery`. |
+| 3. Divisas | `GET https://api.frankfurter.app/latest?from=USD&to=MXN` | Respuesta JSON de Frankfurter que contenga la tasa MXN en `rates`. |
+| 4. Composite API | `GET http://localhost:8080/api/v1/products/P-101/summary` | Un único JSON con los datos de producto e inventario, `price_usd`, `price_mxn`, `currency_conversion_source` y `status: "SUCCESS"`. |
+
+La cuarta solicitud consulta automáticamente los tres proveedores. El precio MXN
+se calcula con la tasa recibida de Frankfurter y se redondea a dos decimales; por
+eso el valor puede variar cuando cambie la tasa publicada. Para reproducir la
+captura compuesta, los servicios de catálogo e inventario deben responder con el
+contrato descrito en las dos primeras filas. Si utilizas otros puertos o hosts,
+configura `CATALOG_SERVICE_URL`, `INVENTORY_SERVICE_URL` y `SERVER_PORT` antes de
+iniciar el gateway.
