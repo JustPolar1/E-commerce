@@ -24,6 +24,14 @@ cd digital
 ```
 
 Por defecto, catálogo usa `8081`, inventario `8082` y el gateway `8080`.
+Si `8080` ya está ocupado, inicia el gateway desde `digital` en PowerShell así:
+
+```powershell
+$env:SERVER_PORT = "8083"
+.\mvnw.cmd spring-boot:run
+```
+
+En ese caso, usa `http://localhost:8083/api/v1/products/P-101/summary` en Postman.
 
 ## Capturas en Postman o Insomnia
 
